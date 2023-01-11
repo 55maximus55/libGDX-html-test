@@ -5,11 +5,14 @@ import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
+import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.maximus.testgame.billiard.Ball;
@@ -22,27 +25,25 @@ import java.util.Comparator;
  */
 public class FirstScreen implements Screen {
 
-    private static final double EPS = MathUtils.FLOAT_ROUNDING_ERROR;
-    Viewport viewport = new ScreenViewport();
     Skin skin = new Skin(Gdx.files.internal("commodore_skin/uiskin.json"));
-    Stage stage = new Stage(viewport);
+    Stage stage = new Stage(new ScreenViewport());
 
     ShapeRenderer shapeRenderer = new ShapeRenderer();
     ArrayList<Ball> balls = new ArrayList<>();
+    Ball selectedBall = null;
 
     public FirstScreen() {
-        balls.add(new Ball());
-        balls.add(new Ball());
-        balls.add(new Ball());
+        Table table = new Table();
+        table.setFillParent(true);
+        table.top();
+        table.left();
 
-        balls.get(0).position.x = 200f;
-        balls.get(0).position.y = 300f;
+        Label selectBallHint = new Label("Select ball: mouse left click", skin);
+        table.add(selectBallHint).row();
+        Label spawnBallHint = new Label("Create ball: mouse right click", skin);
+        table.add(spawnBallHint).row();
 
-        balls.get(1).position.x = 400f;
-        balls.get(1).position.y = 300f;
-
-        balls.get(2).position.x = 600f;
-        balls.get(2).position.y = 200f;
+        stage.addActor(table);
     }
 
     @Override
@@ -53,10 +54,11 @@ public class FirstScreen implements Screen {
     @Override
     public void render(float delta) {
         spawnBall();
+        selectBall();
 
         clearScreen();
         drawBalls();
-        drawBallTrajectoryPrediction(balls.get(0));
+        if (selectedBall != null) drawBallTrajectoryPrediction(selectedBall);
 
         stage.act();
         stage.draw();
@@ -71,10 +73,21 @@ public class FirstScreen implements Screen {
         }
     }
 
+    void selectBall() {
+        if (Gdx.input.isButtonJustPressed(Input.Buttons.LEFT)) {
+            for (Ball ball : balls) {
+                if (ball.position.dst(Gdx.input.getX(), Gdx.graphics.getHeight() - Gdx.input.getY()) < ball.radius) {
+                    selectedBall = ball;
+                }
+            }
+        }
+    }
+
     void drawBalls() {
-        shapeRenderer.setColor(Color.WHITE);
         shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
         for (Ball ball : balls) {
+            shapeRenderer.setColor(Color.WHITE);
+            if (ball == selectedBall) shapeRenderer.setColor(Color.BLUE);
             shapeRenderer.circle(ball.position.x, ball.position.y, ball.radius);
         }
         shapeRenderer.end();
@@ -162,7 +175,7 @@ public class FirstScreen implements Screen {
 
     @Override
     public void resize(int width, int height) {
-        viewport.update(width, height, true);
+        stage.getViewport().update(width, height, true);
     }
 
     @Override
