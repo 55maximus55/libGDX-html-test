@@ -83,24 +83,28 @@ public class FirstScreen implements Screen {
     void drawBallTrajectoryPrediction(Ball ballA) {
         Vector2 dir = new Vector2(Gdx.input.getX(), Gdx.graphics.getHeight() - Gdx.input.getY());
 
-        ArrayList<Ball> predictBalls = new ArrayList<>();
-        for (Ball ballB : balls) {
-            if (ballA == ballB) continue;
+        for (int i = 0; i < 2; i++) {
+            ArrayList<Ball> predictBalls = new ArrayList<>();
+            for (Ball ballB : balls) {
+                if (ballA == ballB) continue;
 
-            Vector2 ball2dir = getBallDir(ballA, ballB, dir);
-            if (ball2dir != null) {
-                predictBalls.add(ballB);
+                Vector2 ball2dir = getBallDir(ballA, ballB, dir);
+                if (ball2dir != null) {
+                    predictBalls.add(ballB);
+                }
             }
-        }
 
-        if (predictBalls.size() > 0) {
-            predictBalls.sort((o1, o2) -> {
-                float dst1 = ballA.position.dst(o1.position);
-                float dst2 = ballA.position.dst(o2.position);
-                if (dst1 > dst2) return 1;
-                else return -1;
-            });
-            drawBallDir(ballA, predictBalls.get(0), dir);
+            if (predictBalls.size() > 0) {
+                Ball b = ballA;
+                predictBalls.sort((o1, o2) -> {
+                    float dst1 = b.position.dst(o1.position);
+                    float dst2 = b.position.dst(o2.position);
+                    return Float.compare(dst1, dst2);
+                });
+                drawBallDir(ballA, predictBalls.get(0), dir);
+                dir = getBallDir(ballA, predictBalls.get(0), dir);
+                ballA = predictBalls.get(0);
+            }
         }
     }
 
